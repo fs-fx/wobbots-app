@@ -1,0 +1,11 @@
+{
+  "appId": "com.wobbots.game",
+  "appName": "Wobbots",
+  "webDir": "www",
+  "backgroundColor": "#1a0f3d",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#1a0f3d",
+    "scrollEnabled": false
+  }
+}
