@@ -1,0 +1,193 @@
+workflows:
+  ios-testflight:
+    name: Wobbots iOS -> TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      groups:
+        - appstore
+      node: 20
+      xcode: 26.1
+      cocoapods: default
+      vars:
+        BUNDLE_ID: com.wobbots.game
+        APP_VERSION: 1.0.0
+    scripts:
+      - name: Proje hazirla
+        script: |
+          mkdir -p www && cp index.html www/index.html
+          npm install
+          npx cap add ios
+          sed -i '' "s/platform :ios, '[0-9.]*'/platform :ios, '15.0'/" ios/App/Podfile
+          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*;/IPHONEOS_DEPLOYMENT_TARGET = 15.0;/g' ios/App/App.xcodeproj/project.pbxproj
+          npx cap sync ios
+      - name: Ikon, acilis ekrani, ayarlar
+        script: |
+          A=ios/App/App/Assets.xcassets
+          I=$(ls icon.* | head -1); S=$(ls splash.* | head -1)
+          sips -s format png -z 1024 1024 "$I" --out $A/AppIcon.appiconset/AppIcon-512@2x.png
+          for f in splash-2732x2732.png splash-2732x2732-1.png splash-2732x2732-2.png; do sips -s format png -z 2732 2732 "$S" --out $A/Splash.imageset/$f; done
+          P=ios/App/App/Info.plist
+          pb() { /usr/libexec/PlistBuddy -c "Delete :$1" $P 2>/dev/null || true; /usr/libexec/PlistBuddy -c "Add :$1 $2 $3" $P; }
+          pb CFBundleDisplayName string Wobbots
+          pb ITSAppUsesNonExemptEncryption bool false
+          pb UIRequiresFullScreen bool true
+          pb UIStatusBarHidden bool true
+          pb UIViewControllerBasedStatusBarAppearance bool false
+          /usr/libexec/PlistBuddy -c "Delete :UISupportedInterfaceOrientations~ipad" $P 2>/dev/null || true
+          pb UISupportedInterfaceOrientations array
+          /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations:0 string UIInterfaceOrientationPortrait" $P
+          X=ios/App/App.xcodeproj/project.pbxproj
+          sed -i '' 's/TARGETED_DEVICE_FAMILY = "1,2";/TARGETED_DEVICE_FAMILY = 1;/g' $X
+          sed -i '' "s/CURRENT_PROJECT_VERSION = [0-9]*;/CURRENT_PROJECT_VERSION = $BUILD_NUMBER;/g" $X
+          sed -i '' "s/MARKETING_VERSION = [0-9.]*;/MARKETING_VERSION = $APP_VERSION;/g" $X
+      - name: Anahtar kontrol
+        script: |
+          set -e
+          python3 - <<'PY'
+          import os, re, subprocess, textwrap
+          env = open(os.environ['CM_ENV'], 'a')
+          bad = False
+          for name in ['APP_STORE_CONNECT_PRIVATE_KEY', 'CERTIFICATE_PRIVATE_KEY']:
+              v = os.environ.get(name, '')
+              m = re.search(r'-----BEGIN ([A-Z ]+)-----(.*?)-----END \1-----', v, re.S)
+              if not m:
+                  print(name + ': BEGIN/END satirlari bulunamadi (uzunluk %d)' % len(v)); bad = True; continue
+              kind = m.group(1); body = re.sub(r'[^A-Za-z0-9+/=]', '', m.group(2))
+              pem = '-----BEGIN %s-----\n%s\n-----END %s-----\n' % (kind, '\n'.join(textwrap.wrap(body, 64)), kind)
+              f = '/tmp/' + name + '.pem'; open(f, 'w').write(pem)
+              ok = subprocess.run(['openssl', 'pkey', '-in', f, '-noout'], capture_output=True).returncode == 0
+              print('%s: %s, %d karakter -> %s' % (name, kind, len(body), 'GECERLI' if ok else 'BOZUK (eksik kopyalanmis)'))
+              if not ok: bad = True; continue
+              env.write('%s<<PEMEOF\n%sPEMEOF\n' % (name, pem))
+          for name in ['APP_STORE_CONNECT_ISSUER_ID', 'APP_STORE_CONNECT_KEY_IDENTIFIER']:
+              v = os.environ.get(name, '').strip()
+              print('%s: %s' % (name, ('%d karakter' % len(v)) if v else 'YOK'))
+              if not v: bad = True
+              else: env.write('%s=%s\n' % (name, v))
+          env.close()
+          if bad: raise SystemExit('Anahtarlardan biri hatali - yukaridaki satirlara bak')
+          PY
+      - name: Imzalama
+        script: |
+          set -e
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create
+          keychain add-certificates
+          xcode-project use-profiles
+      - name: Derleme
+        script: |
+          xcode-project build-ipa --workspace ios/App/App.xcworkspace --scheme App
+      - name: TestFlight yukleme
+        script: |
+          set -e
+          app-store-connect publish \
+            --path "$(ls build/ios/ipa/*.ipa | head -1)" \
+            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
+            --private-key @file:/tmp/APP_STORE_CONNECT_PRIVATE_KEY.pem
+    artifacts:
+      - build/ios/ipa/*.ipa
+
+  android-apk:
+    name: Wobbots Android -> Test APK (anahtarsiz)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      node: 22
+      java: 21
+      vars:
+        APP_VERSION: 1.0.0
+    scripts:
+      - name: Proje hazirla (Android)
+        script: |
+          set -e
+          mkdir -p www && cp index.html www/index.html
+          echo '{"name":"wobbots","version":"1.0.0","private":true}' > package.json
+          npm install @capacitor/core@8.5.3 @capacitor/cli@8.5.3 @capacitor/android@8.5.3
+          npx cap add android
+          npx cap sync android
+      - name: Ikon, acilis ekrani, ayarlar (Android)
+        script: |
+          set -e
+          RES=android/app/src/main/res
+          I=$(ls icon.* | head -1); SP=$(ls splash.* | head -1)
+          rm -rf $RES/mipmap-anydpi-v26
+          for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
+            n=${d%%:*}; s=${d##*:}
+            for f in ic_launcher ic_launcher_round ic_launcher_foreground; do
+              sips -s format png -z $s $s "$I" --out $RES/mipmap-$n/$f.png >/dev/null
+            done
+          done
+          for f in $(find $RES -name splash.png); do
+            w=$(sips -g pixelWidth "$f" | tail -1 | awk '{print $2}'); h=$(sips -g pixelHeight "$f" | tail -1 | awk '{print $2}')
+            m=$(( w > h ? w : h ))
+            sips -s format png -z $m $m "$SP" --out /tmp/sp.png >/dev/null
+            sips -c $h $w /tmp/sp.png --out "$f" >/dev/null
+          done
+          sed -i '' 's/android:name=".MainActivity"/android:name=".MainActivity" android:screenOrientation="portrait"/' android/app/src/main/AndroidManifest.xml
+          sed -i '' "s/versionCode 1$/versionCode $BUILD_NUMBER/; s/versionName \"1.0\"/versionName \"$APP_VERSION\"/" android/app/build.gradle
+      - name: Derleme (APK)
+        script: |
+          set -e
+          cd android && ./gradlew assembleDebug --no-daemon && cd ..
+          mkdir -p dist && cp android/app/build/outputs/apk/debug/app-debug.apk dist/wobbots-test-$BUILD_NUMBER.apk
+    artifacts:
+      - dist/*.apk
+
+  android-release:
+    name: Wobbots Android -> Play AAB + APK
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      android_signing:
+        - wobbots_upload
+      node: 22
+      java: 21
+      vars:
+        APP_VERSION: 1.0.0
+    scripts:
+      - name: Proje hazirla (Android)
+        script: |
+          set -e
+          mkdir -p www && cp index.html www/index.html
+          echo '{"name":"wobbots","version":"1.0.0","private":true}' > package.json
+          npm install @capacitor/core@8.5.3 @capacitor/cli@8.5.3 @capacitor/android@8.5.3
+          npx cap add android
+          npx cap sync android
+      - name: Ikon, acilis ekrani, ayarlar (Android)
+        script: |
+          set -e
+          RES=android/app/src/main/res
+          I=$(ls icon.* | head -1); SP=$(ls splash.* | head -1)
+          rm -rf $RES/mipmap-anydpi-v26
+          for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
+            n=${d%%:*}; s=${d##*:}
+            for f in ic_launcher ic_launcher_round ic_launcher_foreground; do
+              sips -s format png -z $s $s "$I" --out $RES/mipmap-$n/$f.png >/dev/null
+            done
+          done
+          for f in $(find $RES -name splash.png); do
+            w=$(sips -g pixelWidth "$f" | tail -1 | awk '{print $2}'); h=$(sips -g pixelHeight "$f" | tail -1 | awk '{print $2}')
+            m=$(( w > h ? w : h ))
+            sips -s format png -z $m $m "$SP" --out /tmp/sp.png >/dev/null
+            sips -c $h $w /tmp/sp.png --out "$f" >/dev/null
+          done
+          sed -i '' 's/android:name=".MainActivity"/android:name=".MainActivity" android:screenOrientation="portrait"/' android/app/src/main/AndroidManifest.xml
+          sed -i '' "s/versionCode 1$/versionCode $BUILD_NUMBER/; s/versionName \"1.0\"/versionName \"$APP_VERSION\"/" android/app/build.gradle
+      - name: Derleme ve imzalama (AAB + APK)
+        script: |
+          set -e
+          cat >> android/app/build.gradle <<'GRADLE'
+          android {
+              signingConfigs { wob { storeFile file(System.getenv("CM_KEYSTORE_PATH")); storePassword System.getenv("CM_KEYSTORE_PASSWORD"); keyAlias System.getenv("CM_KEY_ALIAS"); keyPassword System.getenv("CM_KEY_PASSWORD") } }
+              buildTypes { release { signingConfig signingConfigs.wob } }
+          }
+          GRADLE
+          cd android && ./gradlew bundleRelease assembleRelease --no-daemon && cd ..
+          mkdir -p dist
+          cp android/app/build/outputs/bundle/release/app-release.aab dist/wobbots-$APP_VERSION-$BUILD_NUMBER.aab
+          cp android/app/build/outputs/apk/release/app-release.apk dist/wobbots-$APP_VERSION-$BUILD_NUMBER.apk
+    artifacts:
+      - dist/*.aab
+      - dist/*.apk
