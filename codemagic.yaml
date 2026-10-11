@@ -7,7 +7,7 @@ workflows:
       groups:
         - appstore
       node: 20
-      xcode: latest
+      xcode: 26.6
       cocoapods: default
       vars:
         BUNDLE_ID: com.wobbots.game
