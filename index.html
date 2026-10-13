@@ -477,6 +477,7 @@ body.rlf #h,body.rlf #h2,body.rlf #pg,body.rlf #t,body.rlf #jb,body.rlf .ab,body
 <div class="lbl">Bot zorluğu</div><div class="row"><button class="it" id="df"></button></div>
 <div class="lbl">Müzik</div><div class="row"><button class="it" id="mzb"></button></div>
 <div class="lbl">Titreşim</div><div class="row"><button class="it" id="vbt"></button></div>
+<div class="lbl">Kare hızı</div><div class="row"><button class="it" id="fpb"></button><button class="it" id="pfb">📊 Gösterge</button></div>
 <div class="lbl">Kontroller: Sol yarı joystick · Sağ yarı zıpla · DAL ileri atılır · TUT öndekini yakalar<br>Klavye: WASD/oklar · Boşluk zıpla · Shift dal · F tut · 1-6 emoji</div>
 <div class="row"><button class="it" id="acb">Hesabım</button><button class="it" id="hwb">Nasıl Oynanır</button><button class="it" id="prb">Gizlilik</button><button class="it" id="spb">Destek</button></div><button id="setx" class="it w">Kapat</button><div class="lbl" id="verl" style="text-align:center"></div></div></div><div id="pfm" class="modal"><div class="pnl"><button id="pfx">✕</button><div class="pfh"><i id="pfav"></i><div><b id="pfn"></b><button id="pfe">✎</button><small id="pfl"></small></div></div><div id="pfs"></div><p id="pfst"></p><div id="pfb"></div><div id="pfg"></div><button class="it w" id="pflo">Çıkış yap</button><button id="pfdel">Hesabımı sil</button></div></div><div id="ask" class="modal"><div class="pnl"><h2 id="askt"></h2><p id="askp"></p><input id="aski" maxlength="12" autocomplete="off"><div class="row"><button class="it" id="askn"></button><button class="big" id="asko"></button></div></div></div><div id="tut" class="modal"><div class="pnl"><button id="tuts">Geç</button><div id="tuti"></div><h2 id="tuth"></h2><p id="tutp"></p><div id="tutd"></div><button class="big" id="tutn">İleri</button></div></div><div id="prv" class="modal"><div class="pnl"><h2>Gizlilik Politikası</h2><div id="prt"><p><b>Wobbots</b> hesap açmadan oynanabilir. İstersen Apple, Google, e-posta veya Game Center ile giriş yaparak ilerlemeni kalıcı hale getirebilirsin.</p><p><b>Hesap verileri:</b> Giriş yaparsan sunucumuzda yalnızca bir hesap kimliği, takma adın, oyun ilerlemen ve giriş sağlayıcısının verdiği kimlik numarası (e-postayla girdiysen e-posta adresin) saklanır. Bunlar yalnızca hesabını tanımak ve ilerlemeni kaydetmek için kullanılır. Hesabını Profil ekranındaki <b>Hesabımı sil</b> ile istediğin an kalıcı olarak silebilirsin.</p><p><b>Cihazında saklananlar:</b> takma adın, ilerlemen, jetonların ve ayarların yalnızca bu cihazda tutulur. Uygulamayı silersen bunlar da silinir.</p><p><b>Çok oyunculu mod:</b> Arkadaşlarınla oynarken takma adın, robotunun görünümü ve oyun içi hareketlerin aynı odadaki oyunculara doğrudan (eşler arası) iletilir. Bağlantı kurmak için IP adresin, eşleştirme sunucusu ve odadaki diğer oyuncular tarafından teknik olarak görülebilir; bu bilgiler saklanmaz.</p><p><b>Reklam, analitik, takip:</b> Yok. Verilerin satılmaz veya üçüncü taraflarla paylaşılmaz.</p><p><b>Çocuklar:</b> Oyun her yaşa uygundur; uygunsuz takma adlar otomatik filtrelenir.</p><p>Sorular için App Store sayfasındaki destek bağlantısını kullanabilirsin.</p></div><button class="it w" id="prx">Kapat</button></div></div>
 <div id="lobby"><div class="pnl"><div id="lcode" class="ttl"></div><div id="lhint"></div><div id="llist"></div><div id="lfr"></div>
@@ -6887,6 +6888,10 @@ function buildBot2(sc,bones,bi,skel){
   put(ell([ft[0],.2,ft[2]+.2],[.4,.27,.56],20),'acc','Foot'+sd);put(ell([ft[0],.42,ft[2]+.05],[.33,.12,.36],14),'acc','Foot'+sd)}
  const mk=(grp,name)=>{if(!G[grp].length)return;const geo=THREE.BufferGeometryUtils.mergeBufferGeometries(G[grp]);geo.computeBoundingSphere();const m=new THREE.SkinnedMesh(geo,new THREE.MeshStandardMaterial());m.name=name;m.frustumCulled=false;m.castShadow=true;sc.add(m);m.bind(skel,new THREE.Matrix4());return m};
  mk('base','B_Base');mk('acc','B_Acc');mk('face','B_Face');mk('glow','B_Glow');
+ try{const parts=[];const tag=(arr,ka,kg)=>arr.forEach(g0=>{const g=g0.clone();const n=g.attributes.position.count;if(!g.attributes.color){const c=new Float32Array(n*3).fill(1);g.setAttribute('color',new THREE.BufferAttribute(c,3))}
+   const k=new Float32Array(n*2);for(let i=0;i<n;i++){k[i*2]=ka;k[i*2+1]=kg}g.setAttribute('aK',new THREE.BufferAttribute(k,2));for(const a of Object.keys(g.attributes))if(!['position','normal','skinIndex','skinWeight','color','aK'].includes(a))g.deleteAttribute(a);parts.push(g)});
+  tag(G.base,0,0);tag(G.acc,1,0);tag(G.glow,0,1);const geo=THREE.BufferGeometryUtils.mergeBufferGeometries(parts);geo.computeBoundingSphere();
+  const m=new THREE.SkinnedMesh(geo,new THREE.MeshLambertMaterial({skinning:true}));m.name='B_All';m.frustumCulled=false;m.visible=false;sc.add(m);m.bind(skel,new THREE.Matrix4())}catch(err){console.warn('b_all',err)}
  B2.base=new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:.24,metalness:0,clearcoat:1,clearcoatRoughness:.08,skinning:true});
  B2.face=new THREE.MeshPhysicalMaterial({map:faceCanvas(0),emissiveMap:faceCanvas(1),emissive:new THREE.Color(1,1,1),emissiveIntensity:1.25,roughness:.12,metalness:.1,clearcoat:1,clearcoatRoughness:.03,skinning:true});
  B2.glow=new THREE.MeshBasicMaterial({color:new THREE.Color(.12,.75,1.15),skinning:true});
@@ -6906,7 +6911,12 @@ function robotize(e){if(e.rb||!ROBO)return;const c=THREE.SkeletonUtils.clone(ROB
  e.g.rotation.copy(sr);e.g.position.copy(sp);
  const mixer=new THREE.AnimationMixer(c),A={};for(const cl of ROBO.anims)A[cl.name]=mixer.clipAction(cl);
  ['Jump','Death','Punch','Wave','ThumbsUp','Yes','No'].forEach(n=>{if(A[n]){A[n].setLoop(THREE.LoopOnce);A[n].clampWhenFinished=true}});
- e.rb={w,c,mixer,A,cur:null,hs,fs,bs,emo:null,emoT:-9};e.bm=main;rbPlay(e,'Idle',0)}
+ e.rb={w,c,mixer,A,cur:null,hs,fs,bs,emo:null,emoT:-9};e.bm=main;
+ {const P={};c.traverse(o=>{if(o.isSkinnedMesh)P[o.name]=o});if(P.B_All){const U={uAcc:{value:main.color},uGlow:{value:new THREE.Color(.12,.75,1.15)}};
+  const mm=new THREE.MeshLambertMaterial({vertexColors:true,skinning:true});mm.onBeforeCompile=s=>{Object.assign(s.uniforms,U);
+   s.vertexShader='attribute vec2 aK;varying vec2 vK;\n'+s.vertexShader.replace('#include <color_vertex>','#include <color_vertex>\nvK=aK;');
+   s.fragmentShader='uniform vec3 uAcc;uniform vec3 uGlow;varying vec2 vK;\n'+s.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\ndiffuseColor.rgb=mix(diffuseColor.rgb,uAcc,vK.x);').replace('#include <dithering_fragment>','gl_FragColor.rgb=mix(gl_FragColor.rgb,uGlow,vK.y);\n#include <dithering_fragment>')};
+  mm.customProgramCacheKey=()=>'wobAll';P.B_All.material=mm;P.B_All.castShadow=false;e.rbP=P;e.rbLow=-1}}rbPlay(e,'Idle',0)}
 function rbPlay(e,name,fade=.18){const R=e.rb;if(!R||R.cur===name)return;const nx=R.A[name];if(!nx)return;const pv=R.cur&&R.A[R.cur];nx.reset().setEffectiveTimeScale(1).setEffectiveWeight(1);if(fade){nx.fadeIn(fade);if(pv)pv.fadeOut(fade)}else if(pv)pv.stop();nx.play();R.cur=name}
 function rbEmote(e,name){if(e.rb){e.rb.emo=name;e.rb.emoT=X}}
 const EMOA=['Wave','Yes','No','ThumbsUp','Dance','Death'];
@@ -6967,12 +6977,13 @@ function setupPost(on){CMP=null;R.outputEncoding=on?THREE.LinearEncoding:THREE.s
  try{const sz=R.getDrawingBufferSize(new THREE.Vector2()),gl2=R.capabilities.isWebGL2,rt=gl2&&THREE.WebGLMultisampleRenderTarget?new THREE.WebGLMultisampleRenderTarget(sz.x,sz.y,{format:THREE.RGBAFormat}):new THREE.WebGLRenderTarget(sz.x,sz.y,{format:THREE.RGBAFormat});
   const c=new THREE.EffectComposer(R,rt);c.setPixelRatio(R.getPixelRatio());c.setSize(innerWidth,innerHeight);c.addPass(new THREE.RenderPass(S,C));
   c.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth/2,innerHeight/2),.28,.45,.94));c.addPass(new THREE.ShaderPass(GRADE));CMP=c}catch(e){console.warn('post off',e);CMP=null;R.outputEncoding=THREE.sRGBEncoding}}
-function applyQ(){const q=sv.q;S.fog.near=q==='l'?45:70;S.fog.far=q==='l'?155:240;if(q!=='l'&&LOWX)lowX(0);R.setPixelRatio(q==='l'?(LOWX?Math.min(devicePixelRatio,.7):AND?Math.min(devicePixelRatio,.85):1):q==='m'?Math.min(devicePixelRatio,1.3):Math.min(devicePixelRatio,1.75));{const cc=q==='l'?0:1;[B2.base,B2.face].forEach(m=>{if(m&&(m.clearcoat>0)!==(cc>0)){m.clearcoat=cc;m.needsUpdate=true}});const sm=S.children.find(o=>o.isMesh&&o.geometry&&o.geometry.parameters&&o.geometry.parameters.width===2000);if(sm){const c2=q==='l'?0:.5;if((sm.material.clearcoat>0)!==(c2>0)){sm.material.clearcoat=c2;sm.material.needsUpdate=true}}}R.setSize(innerWidth,innerHeight);
+function applyQ(){const q=sv.q;S.fog.near=q==='l'?45:70;S.fog.far=q==='l'?155:240;if(q!=='l'&&LOWX)lowX(0);PF.s=1;R.setPixelRatio(baseDPR());{const cc=q==='l'?0:1;[B2.base,B2.face].forEach(m=>{if(m&&(m.clearcoat>0)!==(cc>0)){m.clearcoat=cc;m.needsUpdate=true}});const sm=S.children.find(o=>o.isMesh&&o.geometry&&o.geometry.parameters&&o.geometry.parameters.width===2000);if(sm){const c2=q==='l'?0:.5;if((sm.material.clearcoat>0)!==(c2>0)){sm.material.clearcoat=c2;sm.material.needsUpdate=true}}}R.setSize(innerWidth,innerHeight);
  dl.castShadow=q!=='l';const ms=q==='h'?2048:1024;if(dl.shadow.mapSize.x!==ms){dl.shadow.mapSize.set(ms,ms);if(dl.shadow.map){dl.shadow.map.dispose();dl.shadow.map=null}}
  PTS.visible=q!=='l';CLD.forEach((c,i)=>c.visible=q!=='l'||i===2);setupPost(q!=='l');BAL.forEach((b,i)=>b.visible=q!=='l'||i%3===0);
  document.querySelectorAll('[data-q]').forEach(b=>b.className='it'+(b.dataset.q===q?' on':''));$('vbt').textContent=sv.vib?'📳 Açık':'Kapalı';$('mzb').textContent=sv.music===0?'Kapalı':'🎵 Açık'}
 document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{sv.q=b.dataset.q;save();applyQ()});
 $('vbt').onclick=()=>{sv.vib=sv.vib?0:1;save();applyQ();vib(60)};$('mzb').onclick=()=>{sv.music=sv.music===0?1:0;save();applyQ();sv.music?musStart():musStop()};$('stb').onclick=()=>{applyQ();$('setm').style.display='flex'};$('setx').onclick=()=>$('setm').style.display='none';
+const fpsUI=()=>{$('fpb').textContent=sv.fps30?'🔋 30 FPS (pil dostu)':'⚡ 60 FPS';$('pfb').className='it'+(PF.show?' on':'')};$('fpb').onclick=()=>{sv.fps30=sv.fps30?0:1;save();PF.s=1;setDPR();fpsUI()};$('pfb').onclick=()=>{PF.show=PF.show?0:1;PF.el.style.display=PF.show?'block':'none';fpsUI()};$('stb').addEventListener('click',fpsUI);
 document.querySelectorAll('[data-q]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.q!=='l'&&LOWX)lowX(0)}));
 let toastT=0;function toast(t,s=2.5,h){const e=$('toast');if(h)e.innerHTML=t;else e.textContent=t;e.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>e.style.display='none',s*1000)}
 const lvl=()=>1+Math.floor(sv.p/300);
@@ -7603,7 +7614,7 @@ function anim(e,dt){e.g.position.set(e.x,e.y,e.z);if(e.tlm){const v=RD==='tail'&
  if(e.rb){const R=e.rb;let want='Idle',ts=1;
   if(G.ph==='end'&&e.i===G.w)want='Dance';else if(dive)want='Jump';else if(grab)want='Punch';else if(!e.on&&(e.vy>1.5||e.y>.5)&&G.ph==='play')want='Jump';else if(sp>.8){want='Running';ts=Math.min(1.7,Math.max(.6,sp/6.5))}
   if(R.emo&&X-R.emoT<2.3&&want==='Idle')want=R.emo;else if(X-R.emoT>=2.3)R.emo=null;
-  rbPlay(e,want);if(want==='Running')R.A.Running.timeScale=ts;const nr=e===CT||near(e);if(nr||((tickN+e.i)%3===0))R.mixer.update(nr?dt:dt*3);return}
+  rbPlay(e,want);if(want==='Running')R.A.Running.timeScale=ts;const nr=e===CT||near(e);{const k=sv.q==='l'?4:3;if(nr||((tickN+e.i)%k===0))R.mixer.update(nr?dt:dt*k)}return}
  e.ph+=dt*sp*1.5;const k=dive?0:Math.min(1,sp/4),sw=Math.sin(e.ph)*.32*k,air=e.on?0:1;
  e.f[0].position.z=sw;e.f[1].position.z=-sw;e.f[0].position.y=.12+(air?.25:Math.max(0,Math.cos(e.ph))*.15*k);e.f[1].position.y=.12+(air?.25:Math.max(0,-Math.cos(e.ph))*.15*k);
  if(grab){e.a[0].position.set(-.35,.75,-.55);e.a[1].position.set(.35,.75,-.55)}else{const up=tum?.35+.25*Math.sin(X*20):dive?.45:air*.35;e.a[0].position.set(-.56,.6+up,-sw*.8);e.a[1].position.set(.56,.6+up,sw*.8)}
@@ -7667,6 +7678,16 @@ let tickN=0;function tick(dt){X+=dt;tickN++;
 // FPS izleme: takılırsa kaliteyi otomatik düşür
 
 
+
+// ===== v25 performans yöneticisi =====
+const PF={s:1,fps:60,ms:0,n:0,t:0,show:0,lt:0,el:null};if(sv.fps30===undefined)sv.fps30=AND?1:0;
+function baseDPR(){const q=sv.q;return q==='l'?(LOWX?Math.min(devicePixelRatio,.7):AND?Math.min(devicePixelRatio,.85):1):q==='m'?Math.min(devicePixelRatio,1.3):Math.min(devicePixelRatio,1.75)}
+function setDPR(){const p=Math.max(.5,baseDPR()*PF.s);if(Math.abs(R.getPixelRatio()-p)>.01){R.setPixelRatio(p);R.setSize(innerWidth,innerHeight);if(CMP){CMP.setPixelRatio(p);CMP.setSize(innerWidth,innerHeight)}}}
+function robotLow(){const lo=sv.q==='l';for(const e of E){const P=e.rbP;if(!P||e.rbLow===+lo)continue;e.rbLow=+lo;P.B_All.visible=lo;for(const k of['B_Base','B_Acc','B_Glow'])if(P[k])P[k].visible=!lo}}
+function perfTick(raw){PF.n++;PF.t+=raw;if(PF.t<1.2)return;const f=PF.n/PF.t;PF.fps=f;PF.n=0;PF.t=0;
+ if(G.ph==='play'&&!window.__DTX){const tgt=sv.fps30?29:55;if(f<tgt-3&&PF.s>.6){PF.s=Math.max(.6,PF.s-.1);setDPR()}else if(f>tgt+(sv.fps30?0.5:4)&&PF.s<1){PF.s=Math.min(1,PF.s+.05);setDPR()}}
+ if(PF.show){const i=R.info.render;PF.el.textContent=Math.round(f)+' FPS · '+i.calls+' çizim · '+Math.round(i.triangles/1000)+'k üçgen · çöz '+R.getPixelRatio().toFixed(2)+' · '+({l:'Düşük',m:'Orta',h:'Yüksek'}[sv.q])+(LOWX?'+P':'')+(sv.fps30?' · 30':'')}}
+{const d=document.createElement('div');d.id='perfo';d.style.cssText='position:fixed;left:6px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:99;background:rgba(0,0,0,.7);color:#7dff9b;font:600 11px monospace;padding:3px 7px;border-radius:6px;pointer-events:none;display:none';document.body.appendChild(d);PF.el=d}
 // ===== v24 hafif mod: düşük kalitede ucuz malzeme =====
 let LMQ=-1,lmN=0;
 function lamOf(m){if(!m||!m.isMeshStandardMaterial)return m;if(m.userData.lam)return m.userData.lam;
@@ -7677,7 +7698,7 @@ function lowMats(on){S.traverse(o=>{if(!o.isMesh)return;const f=on?lamOf:stdOf;i
 function lowTick(){const on=sv.q==='l';if(on!==(LMQ===1)||(on&&++lmN%90===0))lowMats(on);document.body.classList.toggle('lowfx',on||AND)}
 // ===== v23 performans: görüş alanı dışını çizme =====
 const CULL=[],_FR=new THREE.Frustum(),_PM=new THREE.Matrix4(),_SPH=new THREE.Sphere(),_HID=[];let LOWX=0;try{LOWX=+(localStorage.getItem('wob_lowx')||0)}catch(e){}
-function preCull(cam){lowTick();_HID.length=0;cam.updateMatrixWorld();_PM.multiplyMatrices(cam.projectionMatrix,cam.matrixWorldInverse);_FR.setFromProjectionMatrix(_PM);
+function preCull(cam){lowTick();robotLow();_HID.length=0;cam.updateMatrixWorld();_PM.multiplyMatrices(cam.projectionMatrix,cam.matrixWorldInverse);_FR.setFromProjectionMatrix(_PM);
  const cp=cam.position,botFar=sv.q==='l'?(LOWX?42:60):sv.q==='m'?90:130;
  for(const e of E){const g=e.g;if(!g.visible)continue;_SPH.center.set(e.x,e.y+1.6,e.z);_SPH.radius=2.6;const d=cp.distanceTo(_SPH.center);if((d>botFar&&e!==CT)||!_FR.intersectsSphere(_SPH)){g.visible=false;_HID.push(g);continue}if(sv.q==='l'&&d>14&&e!==CT)for(const c of g.children){if(c.visible&&c.isMesh&&!c.isSkinnedMesh){c.visible=false;_HID.push(c)}}}
  const VD=sv.q==='l'?160:250;statCull(cp,VD);for(const c of CULL){const o=c.o;if(!o.visible)continue;if((c.dec&&LOWX)||cp.distanceTo(c.c)-c.r>VD){o.visible=false;_HID.push(o);continue}_SPH.center.copy(c.c);_SPH.radius=c.r;if(!_FR.intersectsSphere(_SPH)){o.visible=false;_HID.push(o)}}}
@@ -7687,10 +7708,10 @@ function buildStat(){STAT=[];const ex=new Set();E.forEach(e=>ex.add(e.g));CULL.f
   try{_B3.setFromObject(o)}catch(e){continue}if(_B3.isEmpty())continue;const c=_B3.getCenter(new THREE.Vector3()),r=_B3.getSize(_V3).length()/2;if(!(r<90))continue;STAT.push({o,off:c.sub(o.position),r:r+3})}}
 function statCull(cp,D){if(!STAT){if(!KREADY)return;buildStat()}for(const s of STAT){const o=s.o;if(!o.visible)continue;_V3.copy(o.position).add(s.off);if(cp.distanceTo(_V3)-s.r>D){o.visible=false;_HID.push(o)}}}
 function postCull(){for(const o of _HID)o.visible=true;_HID.length=0}
-function lowX(on){LOWX=on?1:0;try{localStorage.setItem('wob_lowx',LOWX)}catch(e){}if(sv.q==='l')R.setPixelRatio(LOWX?Math.min(devicePixelRatio,.7):AND?Math.min(devicePixelRatio,.85):1),R.setSize(innerWidth,innerHeight);if(CLD)CLD.forEach((c,i)=>c.visible=sv.q!=='l'||(!LOWX&&i===2))}
+function lowX(on){LOWX=on?1:0;try{localStorage.setItem('wob_lowx',LOWX)}catch(e){}if(sv.q==='l'){PF.s=1;setDPR()}if(CLD)CLD.forEach((c,i)=>c.visible=sv.q!=='l'||(!LOWX&&i===2))}
 let last=performance.now(),fpsN=0,fpsT=0,autoLow=0;
-function frame(now){requestAnimationFrame(frame);const raw=(now-last)/1e3,dt=Math.min(.033,raw);last=now;const n=window.__DTX||1;for(let k=0;k<n;k++)tick(dt);preCull(C);if(CMP)CMP.render(dt);else R.render(S,C);postCull();
- if(G.ph==='play'&&!window.__DTX&&raw<1){fpsN++;fpsT+=raw;if(fpsT>4){const f=fpsN/fpsT;fpsN=0;fpsT=0;if(f<26&&sv.q!=='l'&&autoLow<3){autoLow++;sv.q=sv.q==='h'?'m':'l';save();applyQ();toast('⚙ Takılma algılandı, grafik kalitesi düşürüldü')}else if(f<24&&sv.q==='l'&&!LOWX){lowX(1);toast('⚙ Performans modu açıldı')}}}}
+function frame(now){requestAnimationFrame(frame);if(sv.fps30&&!window.__DTX&&now-last<31)return;const raw=(now-last)/1e3,dt=Math.min(sv.fps30?.05:.033,raw);last=now;if(raw<1)perfTick(raw);const n=window.__DTX||1;for(let k=0;k<n;k++)tick(dt);preCull(C);if(CMP)CMP.render(dt);else R.render(S,C);postCull();
+ if(G.ph==='play'&&!window.__DTX&&raw<1&&PF.s<=.61){fpsN++;fpsT+=raw;if(fpsT>4){const f=fpsN/fpsT;fpsN=0;fpsT=0;if(f<(sv.fps30?24:26)&&sv.q!=='l'&&autoLow<3){autoLow++;sv.q=sv.q==='h'?'m':'l';save();applyQ();toast('⚙ Takılma algılandı, grafik kalitesi düşürüldü')}else if(f<(sv.fps30?22:24)&&sv.q==='l'&&!LOWX){lowX(1);toast('⚙ Performans modu açıldı')}}}}
 C.position.set(0,6.5,13);applyQ();enterPhase('menu',0);requestAnimationFrame(frame);
 {let parts=0;const t0=performance.now(),bump=(t)=>{parts++;$('ldp').style.width=(20+parts*40)+'%';if(t)$('ldt').textContent=t;if(parts>=2)setTimeout(()=>{$('ld').classList.add('hide');if(!sv.tut&&!window.__autoJoin)setTimeout(tutShow,500);if(window.__autoJoin){const f=window.__autoJoin;window.__autoJoin=null;setTimeout(f,300)}},Math.max(200,700-(performance.now()-t0)))};
  $('ldp').style.width='20%';setTimeout(()=>loadKenney(()=>{decorate();setTimeout(tryPrev,800)}),60);setTimeout(()=>loadRobot(ok=>{relook();setTimeout(tryPrev,2500);bump(ok?'Karakterler hazır':'Hazır')}),30);
