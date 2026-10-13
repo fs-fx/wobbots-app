@@ -21,6 +21,12 @@
 .fr button.x{background:none;box-shadow:none;color:#fff;opacity:.55;padding:5px 6px}
 .fre{font-size:12px;opacity:.7;padding:4px 2px;font-weight:600}
 #lfr{max-height:22vh;overflow:auto;margin:6px 0;text-align:left}
+
+/* v24: Android / düşük kalite — canvas üstündeki pahalı bulanıklık ve gölge filtrelerini kapat */
+.lowfx *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.lowfx #h .chip,.lowfx #toast,.lowfx #spec,.lowfx #emw,.lowfx #card p{background:rgba(20,15,56,.86)!important}
+.lowfx #jb img,.lowfx .ab img,.lowfx #qx img,.lowfx #emb img,.lowfx #cb .ico{filter:none!important}
+.lowfx .modal{background:rgba(10,6,30,.72)!important}
 </style>
 <style>
 :root{--bg:#7fd3ff;--ink:#1d1a3a;--pop:#ff4f9a;--sun:#ffd23f;--blu:#3b8bff;--pnl:linear-gradient(180deg,rgba(58,48,132,.93),rgba(28,22,68,.96))}
@@ -6537,7 +6543,7 @@ body.rlf #h,body.rlf #h2,body.rlf #pg,body.rlf #t,body.rlf #jb,body.rlf .ab,body
 // ================= temel sahne =================
 const $=id=>document.getElementById(id),RN=Math.random,PI=Math.PI,hx=v=>'#'+((v>>>0)&0xffffff).toString(16).padStart(6,'0');
 const DX=130;// 2. parkur hattı (Kapı Kaçışı, Duvar Partisi)
-const QS=(()=>{try{return JSON.parse(localStorage.getItem('fasulye1')||'{}').q||''}catch(e){return''}})();const R=new THREE.WebGLRenderer({antialias:QS!=='l',powerPreference:'high-performance'});R.setSize(innerWidth,innerHeight);R.setPixelRatio(Math.min(devicePixelRatio,1.75));
+const AND=/Android/i.test(navigator.userAgent);const QS=(()=>{try{return JSON.parse(localStorage.getItem('fasulye1')||'{}').q||''}catch(e){return''}})()||(AND?'l':'');const R=new THREE.WebGLRenderer({antialias:QS!=='l'&&!AND,powerPreference:'high-performance'});R.setSize(innerWidth,innerHeight);R.setPixelRatio(Math.min(devicePixelRatio,1.75));
 R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=1.05;R.outputEncoding=THREE.sRGBEncoding;R.physicallyCorrectLights=false;
 const SC=c=>new THREE.Color(c).convertSRGBToLinear(),setC=(col,h)=>col.setHex(h).convertSRGBToLinear(),TX=c=>{const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;return t};
 document.body.prepend(R.domElement);
@@ -6930,7 +6936,7 @@ const CF=[];function boom(e){fx('s_conf',e.x,e.y+3,e.z,9,1.3,1.5);fx('s_star',e.
 
 // ================= kayıt / mağaza / ayarlar =================
 const LS='fasulye1',TOUCH=matchMedia('(hover:none)').matches;
-let sv={c:0,p:0,best:0,own:{},eq:{b:0xff4f4f,h:1,cc:0xffd23f,t:0xffffff},up:{j:0,s:0},d:1,day:'',mute:0,crowns:0,nick:'',q:TOUCH?'m':'h',vib:1};
+let sv={c:0,p:0,best:0,own:{},eq:{b:0xff4f4f,h:1,cc:0xffd23f,t:0xffffff},up:{j:0,s:0},d:1,day:'',mute:0,crowns:0,nick:'',q:AND?'l':TOUCH?'m':'h',vib:1};
 const SV0=JSON.parse(JSON.stringify(sv));
 try{Object.assign(sv,JSON.parse(localStorage.getItem(LS)||'{}'))}catch(e){}
 const save=()=>{try{localStorage.setItem(LS,JSON.stringify(sv))}catch(e){}if(typeof cloudSoon==='function')cloudSoon()};
@@ -6961,7 +6967,7 @@ function setupPost(on){CMP=null;R.outputEncoding=on?THREE.LinearEncoding:THREE.s
  try{const sz=R.getDrawingBufferSize(new THREE.Vector2()),gl2=R.capabilities.isWebGL2,rt=gl2&&THREE.WebGLMultisampleRenderTarget?new THREE.WebGLMultisampleRenderTarget(sz.x,sz.y,{format:THREE.RGBAFormat}):new THREE.WebGLRenderTarget(sz.x,sz.y,{format:THREE.RGBAFormat});
   const c=new THREE.EffectComposer(R,rt);c.setPixelRatio(R.getPixelRatio());c.setSize(innerWidth,innerHeight);c.addPass(new THREE.RenderPass(S,C));
   c.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth/2,innerHeight/2),.28,.45,.94));c.addPass(new THREE.ShaderPass(GRADE));CMP=c}catch(e){console.warn('post off',e);CMP=null;R.outputEncoding=THREE.sRGBEncoding}}
-function applyQ(){const q=sv.q;S.fog.near=q==='l'?45:70;S.fog.far=q==='l'?155:240;if(q!=='l'&&LOWX)lowX(0);R.setPixelRatio(q==='l'?(LOWX?Math.min(devicePixelRatio,.8):1):q==='m'?Math.min(devicePixelRatio,1.3):Math.min(devicePixelRatio,1.75));{const cc=q==='l'?0:1;[B2.base,B2.face].forEach(m=>{if(m&&(m.clearcoat>0)!==(cc>0)){m.clearcoat=cc;m.needsUpdate=true}});const sm=S.children.find(o=>o.isMesh&&o.geometry&&o.geometry.parameters&&o.geometry.parameters.width===2000);if(sm){const c2=q==='l'?0:.5;if((sm.material.clearcoat>0)!==(c2>0)){sm.material.clearcoat=c2;sm.material.needsUpdate=true}}}R.setSize(innerWidth,innerHeight);
+function applyQ(){const q=sv.q;S.fog.near=q==='l'?45:70;S.fog.far=q==='l'?155:240;if(q!=='l'&&LOWX)lowX(0);R.setPixelRatio(q==='l'?(LOWX?Math.min(devicePixelRatio,.7):AND?Math.min(devicePixelRatio,.85):1):q==='m'?Math.min(devicePixelRatio,1.3):Math.min(devicePixelRatio,1.75));{const cc=q==='l'?0:1;[B2.base,B2.face].forEach(m=>{if(m&&(m.clearcoat>0)!==(cc>0)){m.clearcoat=cc;m.needsUpdate=true}});const sm=S.children.find(o=>o.isMesh&&o.geometry&&o.geometry.parameters&&o.geometry.parameters.width===2000);if(sm){const c2=q==='l'?0:.5;if((sm.material.clearcoat>0)!==(c2>0)){sm.material.clearcoat=c2;sm.material.needsUpdate=true}}}R.setSize(innerWidth,innerHeight);
  dl.castShadow=q!=='l';const ms=q==='h'?2048:1024;if(dl.shadow.mapSize.x!==ms){dl.shadow.mapSize.set(ms,ms);if(dl.shadow.map){dl.shadow.map.dispose();dl.shadow.map=null}}
  PTS.visible=q!=='l';CLD.forEach((c,i)=>c.visible=q!=='l'||i===2);setupPost(q!=='l');BAL.forEach((b,i)=>b.visible=q!=='l'||i%3===0);
  document.querySelectorAll('[data-q]').forEach(b=>b.className='it'+(b.dataset.q===q?' on':''));$('vbt').textContent=sv.vib?'📳 Açık':'Kapalı';$('mzb').textContent=sv.music===0?'Kapalı':'🎵 Açık'}
@@ -6993,7 +6999,7 @@ const num=(v,d)=>Number.isFinite(v)?(v>>>0)&0xffffff:d;
 function myLook(e){setC(e.bm.color,sv.eq.b);setC(e.cm.color,sv.eq.cc);setHat(e,sv.eq.h);setAcc(e,sv.eq.a||0);setC(DMY.color,sv.eq.t);e.hk='me';if(e.lab)e.lab.visible=false}
 function botLook(e){if(e.hk==='bot')return;const i=e.i;setC(e.bm.color,BC[(i*7+1)%16]);setC(e.cm.color,BC[(i*5+3)%16]);setHat(e,[0,1,2,3,4,1,4,3,5,6][i%10]);setAcc(e,[0,0,1,0,3,0,2,0,4,0,5][i%11]);e.hk='bot';if(e.lab)e.lab.visible=false}
 function remoteLook(e,pr){const k=[pr.n,pr.b,pr.h,pr.cc,pr.a].join('|');if(e.hk===k)return;e.hk=k;setC(e.bm.color,num(pr.b,0xff4f4f));setC(e.cm.color,num(pr.cc,0xffd23f));setHat(e,Math.max(0,Math.min(6,pr.h|0)));setAcc(e,Math.max(0,Math.min(5,pr.a|0)));makeLab(e,String(pr.n||'Oyuncu').slice(0,12))}
-function relook(){E.forEach((e,i)=>{if(i===ME)myLook(e);else if(e.human&&e.peer&&PEER[e.peer])remoteLook(e,PEER[e.peer]);else botLook(e)});MEK.visible=ME>=0;if(ME>=0)E[ME].g.add(MEK)}
+function relook(){E.forEach((e,i)=>{if(i===ME)myLook(e);else if(e.human&&e.peer&&PEER[e.peer])remoteLook(e,PEER[e.peer]);else botLook(e)});MEK.visible=ME>=0;if(ME>=0)E[ME].g.add(MEK);try{if(sv.q==='l')lowMats(true)}catch(e){}}
 const nameOf=i=>i<0?'?':i===ME?(sv.nick||'Sen'):E[i].human&&E[i].peer&&PEER[E[i].peer]?String(PEER[E[i].peer].n||'Oyuncu').slice(0,12):NAMES[i];
 
 // ================= turlar =================
@@ -7155,7 +7161,7 @@ const cd=$('c');let cardT=0,ln=9;
 function card(h,h2,p,dur){$('ch').textContent=h;$('ch2').textContent=h2||'';$('ch2').style.display=h2?'':'none';$('cp').textContent=p||'';$('cp').style.display=p?'':'none';const c=$('card');c.style.display='block';c.classList.remove('pp');void c.offsetWidth;c.classList.add('pp');clearTimeout(cardT);cardT=setTimeout(()=>c.style.display='none',dur*1000)}
 function hideCard(){clearTimeout(cardT);$('card').style.display='none'}
 function pop(t){cd.textContent=t;cd.classList.remove('pp');void cd.offsetWidth;cd.classList.add('pp')}
-function setupRound(rd){G.rd=rd;G.setupRd=rd;RD=G.plan[rd];G.finN=0;G.outN=0;
+function setupRound(rd){setTimeout(()=>{try{if(sv.q==='l')lowMats(true)}catch(e){}},0);G.rd=rd;G.setupRd=rd;RD=G.plan[rd];G.finN=0;G.outN=0;
  const ps=E.filter(e=>e.part),n=ps.length;G.quota=rd===2?1:Math.max(1,Math.floor(n/2));
  E.forEach(e=>{Object.assign(e,{out:false,fin:false,vx:0,vz:0,vy:0,kx:0,kz:0,on:null,hc:0,bc:0,cn:0,t:0,ti:-1,dec:0,net:null,st:0,cp:null,cpz:0,gh:0,ci:0,dv:0,gr:-1,grc:0,sl:0,flg:0,dw:-1,tx2:0,tb:0,tail:0,tim:0,sc:0});e.g.visible=e.part;e.g.rotation.x=0;e.g.rotation.z=0});
  const[cx,cz]=ARENA[RD];
@@ -7660,11 +7666,20 @@ let tickN=0;function tick(dt){X+=dt;tickN++;
  if(MP&&NET&&me)NET.presence({x:r2(me.x),y:r2(me.y),z:r2(me.z),vx:r2(me.vx),vz:r2(me.vz),vy:r2(me.vy),on:me.on?1:0,fl:flg(me)})}
 // FPS izleme: takılırsa kaliteyi otomatik düşür
 
+
+// ===== v24 hafif mod: düşük kalitede ucuz malzeme =====
+let LMQ=-1,lmN=0;
+function lamOf(m){if(!m||!m.isMeshStandardMaterial)return m;if(m.userData.lam)return m.userData.lam;
+ const L=new THREE.MeshLambertMaterial({map:m.map,vertexColors:m.vertexColors,emissiveMap:m.emissiveMap,emissiveIntensity:m.emissiveIntensity,transparent:m.transparent,opacity:m.opacity,side:m.side,skinning:m.skinning,alphaTest:m.alphaTest,fog:m.fog,depthWrite:m.depthWrite,depthTest:m.depthTest});
+ L.color=m.color;L.emissive=m.emissive;L.userData.std=m;m.userData.lam=L;return L}
+const stdOf=m=>m&&m.isMeshLambertMaterial&&m.userData.std?m.userData.std:m;
+function lowMats(on){S.traverse(o=>{if(!o.isMesh)return;const f=on?lamOf:stdOf;if(Array.isArray(o.material)){const a=o.material.map(f);if(a.some((m,i)=>m!==o.material[i]))o.material=a}else{const m=f(o.material);if(m!==o.material)o.material=m}});LMQ=on?1:0}
+function lowTick(){const on=sv.q==='l';if(on!==(LMQ===1)||(on&&++lmN%90===0))lowMats(on);document.body.classList.toggle('lowfx',on||AND)}
 // ===== v23 performans: görüş alanı dışını çizme =====
 const CULL=[],_FR=new THREE.Frustum(),_PM=new THREE.Matrix4(),_SPH=new THREE.Sphere(),_HID=[];let LOWX=0;try{LOWX=+(localStorage.getItem('wob_lowx')||0)}catch(e){}
-function preCull(cam){_HID.length=0;cam.updateMatrixWorld();_PM.multiplyMatrices(cam.projectionMatrix,cam.matrixWorldInverse);_FR.setFromProjectionMatrix(_PM);
+function preCull(cam){lowTick();_HID.length=0;cam.updateMatrixWorld();_PM.multiplyMatrices(cam.projectionMatrix,cam.matrixWorldInverse);_FR.setFromProjectionMatrix(_PM);
  const cp=cam.position,botFar=sv.q==='l'?(LOWX?42:60):sv.q==='m'?90:130;
- for(const e of E){const g=e.g;if(!g.visible)continue;_SPH.center.set(e.x,e.y+1.6,e.z);_SPH.radius=2.6;const d=cp.distanceTo(_SPH.center);if((d>botFar&&e!==CT)||!_FR.intersectsSphere(_SPH)){g.visible=false;_HID.push(g)}}
+ for(const e of E){const g=e.g;if(!g.visible)continue;_SPH.center.set(e.x,e.y+1.6,e.z);_SPH.radius=2.6;const d=cp.distanceTo(_SPH.center);if((d>botFar&&e!==CT)||!_FR.intersectsSphere(_SPH)){g.visible=false;_HID.push(g);continue}if(sv.q==='l'&&d>14&&e!==CT)for(const c of g.children){if(c.visible&&c.isMesh&&!c.isSkinnedMesh){c.visible=false;_HID.push(c)}}}
  const VD=sv.q==='l'?160:250;statCull(cp,VD);for(const c of CULL){const o=c.o;if(!o.visible)continue;if((c.dec&&LOWX)||cp.distanceTo(c.c)-c.r>VD){o.visible=false;_HID.push(o);continue}_SPH.center.copy(c.c);_SPH.radius=c.r;if(!_FR.intersectsSphere(_SPH)){o.visible=false;_HID.push(o)}}}
 let STAT=null;const _B3=new THREE.Box3(),_V3=new THREE.Vector3();
 function buildStat(){STAT=[];const ex=new Set();E.forEach(e=>ex.add(e.g));CULL.forEach(c=>ex.add(c.o));if(SKYB)ex.add(SKYB);
@@ -7672,7 +7687,7 @@ function buildStat(){STAT=[];const ex=new Set();E.forEach(e=>ex.add(e.g));CULL.f
   try{_B3.setFromObject(o)}catch(e){continue}if(_B3.isEmpty())continue;const c=_B3.getCenter(new THREE.Vector3()),r=_B3.getSize(_V3).length()/2;if(!(r<90))continue;STAT.push({o,off:c.sub(o.position),r:r+3})}}
 function statCull(cp,D){if(!STAT){if(!KREADY)return;buildStat()}for(const s of STAT){const o=s.o;if(!o.visible)continue;_V3.copy(o.position).add(s.off);if(cp.distanceTo(_V3)-s.r>D){o.visible=false;_HID.push(o)}}}
 function postCull(){for(const o of _HID)o.visible=true;_HID.length=0}
-function lowX(on){LOWX=on?1:0;try{localStorage.setItem('wob_lowx',LOWX)}catch(e){}if(sv.q==='l')R.setPixelRatio(LOWX?Math.min(devicePixelRatio,.8):1),R.setSize(innerWidth,innerHeight);if(CLD)CLD.forEach((c,i)=>c.visible=sv.q!=='l'||(!LOWX&&i===2))}
+function lowX(on){LOWX=on?1:0;try{localStorage.setItem('wob_lowx',LOWX)}catch(e){}if(sv.q==='l')R.setPixelRatio(LOWX?Math.min(devicePixelRatio,.7):AND?Math.min(devicePixelRatio,.85):1),R.setSize(innerWidth,innerHeight);if(CLD)CLD.forEach((c,i)=>c.visible=sv.q!=='l'||(!LOWX&&i===2))}
 let last=performance.now(),fpsN=0,fpsT=0,autoLow=0;
 function frame(now){requestAnimationFrame(frame);const raw=(now-last)/1e3,dt=Math.min(.033,raw);last=now;const n=window.__DTX||1;for(let k=0;k<n;k++)tick(dt);preCull(C);if(CMP)CMP.render(dt);else R.render(S,C);postCull();
  if(G.ph==='play'&&!window.__DTX&&raw<1){fpsN++;fpsT+=raw;if(fpsT>4){const f=fpsN/fpsT;fpsN=0;fpsT=0;if(f<26&&sv.q!=='l'&&autoLow<3){autoLow++;sv.q=sv.q==='h'?'m':'l';save();applyQ();toast('⚙ Takılma algılandı, grafik kalitesi düşürüldü')}else if(f<24&&sv.q==='l'&&!LOWX){lowX(1);toast('⚙ Performans modu açıldı')}}}}
